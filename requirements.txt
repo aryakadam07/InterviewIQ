@@ -30,3 +30,4 @@ tqdm>=4.66.0
 python-dotenv>=1.0.0
 flask
 flask-cors
+gunicorn
