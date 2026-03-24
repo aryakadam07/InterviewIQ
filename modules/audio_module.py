@@ -70,9 +70,12 @@ class AudioProcessor:
             Path to extracted audio file
         """
         try:
-            from moviepy.editor import VideoFileClip
+            from moviepy import VideoFileClip
         except ImportError:
-            raise ImportError("moviepy required: pip install moviepy")
+            try:
+                from moviepy.editor import VideoFileClip  # fallback for v1.x
+            except ImportError:
+                raise ImportError("moviepy required: pip install moviepy")
 
         if output_path is None:
             tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
