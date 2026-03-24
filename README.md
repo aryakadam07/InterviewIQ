@@ -44,6 +44,16 @@ python main.py
 ```
 Access the dashboard at `http://localhost:5000`.
 
+
+ Live App: https://interviewiq-2-hip6.onrender.com
+
+## Features
+
+* AI-based interview analysis
+* Speech + NLP + CV insights
+* Performance scoring
+
+
 ### 3. Usage
 - **Analyze**: Upload a video of your mock interview or recorded talk.
 - **Review**: Navigate through the interactive dashboard to see your scores.
