@@ -5,7 +5,7 @@ import logging
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from pathlib import Path
-
+from interview_chat_backend import chat_bp
 # Import your modules
 from modules.pipeline import InterviewAnalysisPipeline
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
-
+app.register_blueprint(chat_bp)
 # Store the last report in memory for demo/dev purposes
 last_report = None
 
