@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InterviewIQ — Live Session</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ── Reset & tokens ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #161a22;
+    --surface2:  #1e2330;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.14);
+    --accent:    #6c8fff;
+    --accent2:   #4af0b6;
+    --danger:    #ff6b6b;
+    --text:      #e8eaf0;
+    --muted:     #8890a0;
+    --radius:    14px;
+    --ff-head:   'DM Serif Display', serif;
+    --ff-body:   'DM Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ff-body);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-template-rows: 56px 1fr;
+    grid-template-areas: "nav nav" "chat cam";
+  }
+
+  /* ── Nav ────────────────────────────────────────────────────── */
+  nav {
+    grid-area: nav;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  nav .logo { font-family: var(--ff-head); font-size: 20px; color: var(--text); }
+  nav .logo span { color: var(--accent); }
+  nav .pill {
+    margin-left: auto;
+    font-size: 12px;
+    background: rgba(108,143,255,.15);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+
+  /* ── Chat panel ─────────────────────────────────────────────── */
+  #chat-panel {
+    grid-area: chat;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Setup screen */
+  #setup-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 520px;
+    width: 100%;
+  }
+  .setup-card h1 {
+    font-family: var(--ff-head);
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .setup-card p { color: var(--muted); margin-bottom: 28px; }
+
+  .field-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .field-group { margin-bottom: 20px; }
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cat-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .2s, background .2s;
+    font-family: var(--ff-body);
+    font-size: 14px;
+  }
+  .cat-btn:hover { border-color: var(--border2); background: var(--surface); }
+  .cat-btn.active { border-color: var(--accent); background: rgba(108,143,255,.1); color: var(--accent); }
+  .cat-btn .cat-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+
+  .q-select {
+    display: flex;
+    gap: 8px;
+  }
+  .q-num {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: var(--ff-body);
+    transition: border-color .2s;
+  }
+  .q-num:hover { border-color: var(--border2); }
+  .q-num.active { border-color: var(--accent); color: var(--accent); background: rgba(108,143,255,.1); }
+
+  .btn-start {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: var(--ff-body);
+    transition: opacity .2s, transform .1s;
+  }
+  .btn-start:hover { opacity: .9; }
+  .btn-start:active { transform: scale(.99); }
+  .btn-start:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* Chat messages */
+  #messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #messages-area.visible { display: flex; }
+
+  .msg {
+    display: flex;
+    gap: 12px;
+    max-width: 90%;
+    animation: fadeUp .35s ease;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .msg.ai { align-self: flex-start; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .avatar.ai-av { background: linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; }
+  .avatar.user-av { background: var(--surface2); border:1px solid var(--border2); color:var(--text); }
+
+  .bubble {
+    border-radius: 16px;
+    padding: 12px 16px;
+    font-size: 14.5px;
+    line-height: 1.65;
+  }
+  .msg.ai  .bubble { background: var(--surface); border: 1px solid var(--border); border-top-left-radius: 4px; }
+  .msg.user .bubble { background: rgba(108,143,255,.18); border: 1px solid rgba(108,143,255,.25); border-top-right-radius: 4px; color: #d8e2ff; }
+
+  .bubble .q-badge {
+    display: inline-block;
+    font-size: 11px;
+    background: rgba(74,240,182,.15);
+    color: var(--accent2);
+    padding: 2px 8px;
+    border-radius: 100px;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  /* Score card inside chat */
+  .score-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .score-card .sc-title { font-weight: 600; margin-bottom: 10px; color: var(--text); }
+  .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .score-row .label { color: var(--muted); min-width: 90px; font-size: 12px; }
+  .score-bar-wrap { flex:1; height: 5px; background: rgba(255,255,255,.08); border-radius: 10px; overflow:hidden; }
+  .score-bar { height:100%; border-radius:10px; transition: width .8s ease; }
+  .score-val { min-width: 32px; text-align: right; font-weight:500; font-size:12px; }
+  .tip-list { margin-top: 10px; padding-top: 10px; border-top:1px solid var(--border); }
+  .tip-item { display:flex; gap:6px; font-size:12px; color:var(--muted); margin-bottom:4px; line-height:1.5; }
+  .tip-item::before { content:"→"; color:var(--accent); flex-shrink:0; }
+
+  /* Progress bar */
+  #progress-bar-wrap {
+    padding: 12px 24px 0;
+    display: none;
+  }
+  #progress-bar-wrap.visible { display: block; }
+  #progress-bar-wrap .prog-meta { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:6px; }
+  .prog-track { height: 3px; background: rgba(255,255,255,.06); border-radius:10px; overflow:hidden; }
+  .prog-fill  { height:100%; background: linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:10px; transition:width .6s ease; }
+
+  /* Controls bar */
+  #controls {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: none;
+    gap: 12px;
+    align-items: center;
+  }
+  #controls.visible { display: flex; }
+
+  .ctrl-status {
+    flex:1;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); }
+  .dot.recording { background:var(--danger); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  .btn-rec {
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: var(--ff-body);
+    transition: opacity .2s, transform .1s;
+  }
+  .btn-rec:active { transform:scale(.97); }
+  .btn-rec.start  { background: var(--accent2); color: #0d0f14; }
+  .btn-rec.stop   { background: var(--danger);  color: #fff; }
+  .btn-rec:disabled { opacity:.4; cursor:not-allowed; }
+
+  .btn-skip {
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--ff-body);
+    transition: border-color .2s;
+  }
+  .btn-skip:hover { border-color: var(--text); color: var(--text); }
+  .btn-skip:disabled { opacity:.4; cursor:not-allowed; }
+
+  /* ── Camera panel ───────────────────────────────────────────── */
+  #cam-panel {
+    grid-area: cam;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  #cam-panel h2 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing:.06em; font-weight:500; }
+
+  .cam-box {
+    position: relative;
+    background: #000;
+    border-radius: 14px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+  }
+  #video-el { width:100%; height:100%; object-fit:cover; display:block; }
+  #video-el.mirrored { transform: scaleX(-1); }
+
+  .cam-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .face-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(4px);
+    font-weight: 500;
+  }
+  .face-tag.ok   { color: var(--accent2); }
+  .face-tag.warn { color: var(--danger); }
+  .face-tag.idle { color: var(--muted); }
+
+  #timer-display {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    letter-spacing: .05em;
+  }
+  #timer-display.warn { color: var(--danger); }
+
+  .live-metrics {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 13px;
+  }
+  .live-metrics h3 { color: var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; font-weight:500; }
+  .metric-row { display:flex; justify-content:space-between; padding: 5px 0; border-bottom:1px solid var(--border); }
+  .metric-row:last-child { border-bottom:none; }
+  .metric-row .mk { color:var(--muted); }
+  .metric-row .mv { font-weight:500; }
+  .metric-row .mv.good { color:var(--accent2); }
+  .metric-row .mv.bad  { color:var(--danger); }
+
+  /* Final report */
+  #report-section {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #report-section.visible { display:flex; }
+
+  .rep-grade {
+    text-align: center;
+    font-family: var(--ff-head);
+    font-size: 64px;
+    line-height: 1;
+    background: linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .rep-score-label { text-align:center; font-size:13px; color:var(--muted); margin-top:4px; }
+
+  .rep-bars { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+
+  .btn-restart {
+    width:100%;
+    padding:12px;
+    background:transparent;
+    border:1px solid var(--border2);
+    color:var(--text);
+    border-radius:10px;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    font-family:var(--ff-body);
+    transition:background .2s;
+    margin-top:8px;
+  }
+  .btn-restart:hover { background:var(--surface2); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    body { grid-template-columns:1fr; grid-template-rows:56px auto 1fr 260px; grid-template-areas:"nav" "cam" "chat" "ctrl"; }
+    #cam-panel { max-height:260px; overflow:hidden; }
+    #controls { grid-area:ctrl; border-top:1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ────────────────────────────────────────────────────────────── -->
+<nav>
+  <span class="logo">Interview<span>IQ</span></span>
+  <span class="pill" id="session-badge">Live Session</span>
+</nav>
+
+<!-- ── Chat Panel ─────────────────────────────────────────────────────── -->
+<section id="chat-panel">
+
+  <!-- SETUP SCREEN -->
+  <div id="setup-screen">
+    <div class="setup-card">
+      <h1>Ready to practice?</h1>
+      <p>Choose your focus area and number of questions. The AI interviewer will guide you through the session.</p>
+
+      <div class="field-group">
+        <div class="field-label">Category</div>
+        <div class="cat-grid">
+          <button class="cat-btn active" data-cat="behavioral">
+            <span class="cat-icon">🎯</span>Behavioral
+          </button>
+          <button class="cat-btn" data-cat="technical">
+            <span class="cat-icon">⚙️</span>Technical
+          </button>
+          <button class="cat-btn" data-cat="situational">
+            <span class="cat-icon">🔀</span>Situational
+          </button>
+          <button class="cat-btn" data-cat="motivational">
+            <span class="cat-icon">🚀</span>Motivational
+          </button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Number of questions</div>
+        <div class="q-select">
+          <button class="q-num active" data-n="3">3</button>
+          <button class="q-num" data-n="5">5</button>
+          <button class="q-num" data-n="7">7</button>
+        </div>
+      </div>
+
+      <button class="btn-start" id="btn-start-session">Start Interview →</button>
+    </div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div id="progress-bar-wrap">
+    <div class="prog-meta">
+      <span id="prog-label">Question 1 of 5</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="messages-area"></div>
+
+  <!-- CONTROLS -->
+  <div id="controls">
+    <div class="ctrl-status">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text">Press record to answer</span>
+    </div>
+    <button class="btn-skip" id="btn-skip" disabled>Skip</button>
+    <button class="btn-rec start" id="btn-record">⏺ Record</button>
+  </div>
+</section>
+
+<!-- ── Camera Panel ───────────────────────────────────────────────────── -->
+<aside id="cam-panel">
+  <h2>Live Feed</h2>
+
+  <div class="cam-box">
+    <video id="video-el" autoplay muted playsinline class="mirrored"></video>
+    <div class="cam-overlay">
+      <span class="face-tag idle" id="tag-face">No face</span>
+      <span class="face-tag idle" id="tag-gaze">Gaze —</span>
+      <span class="face-tag idle" id="tag-head">Head —</span>
+    </div>
+  </div>
+
+  <div id="timer-display">0:00</div>
+
+  <div class="live-metrics" id="live-metrics">
+    <h3>Session metrics</h3>
+    <div class="metric-row"><span class="mk">Questions</span><span class="mv" id="m-qcount">—</span></div>
+    <div class="metric-row"><span class="mk">Avg Score</span><span class="mv" id="m-avgscore">—</span></div>
+    <div class="metric-row"><span class="mk">Avg WPM</span><span class="mv" id="m-wpm">—</span></div>
+    <div class="metric-row"><span class="mk">Eye contact</span><span class="mv" id="m-eye">—</span></div>
+  </div>
+
+  <!-- REPORT (shown at end) -->
+  <div id="report-section">
+    <div class="rep-grade" id="rep-grade">—</div>
+    <div class="rep-score-label" id="rep-label">Overall Score</div>
+    <div class="rep-bars" id="rep-bars"></div>
+    <button class="btn-restart" onclick="location.reload()">Start a new session</button>
+  </div>
+</aside>
+
+<!-- ================================================================== -->
+<script>
+/* ── State ──────────────────────────────────────────────────────────── */
+const state = {
+  sessionId:    null,
+  category:     "behavioral",
+  numQuestions: 3,
+  qIndex:       0,
+  totalQ:       0,
+  recording:    false,
+  mediaRecorder:null,
+  chunks:       [],
+  stream:       null,
+  timerInterval:null,
+  elapsed:      0,
+  frameInterval:null,
+  lastFrame:    null,
+  scores:       [],
+  eyeHits:      0,
+  eyeTotal:     0,
+};
+
+/* ── DOM refs ───────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const setupScreen   = $("setup-screen");
+const messagesArea  = $("messages-area");
+const controls      = $("controls");
+const progressWrap  = $("progress-bar-wrap");
+const progFill      = $("prog-fill");
+const progLabel     = $("prog-label");
+const progPct       = $("prog-pct");
+const btnRecord     = $("btn-record");
+const btnSkip       = $("btn-skip");
+const statusDot     = $("status-dot");
+const statusText    = $("status-text");
+const videoEl       = $("video-el");
+const timerDisplay  = $("timer-display");
+const tagFace       = $("tag-face");
+const tagGaze       = $("tag-gaze");
+const tagHead       = $("tag-head");
+
+/* ── Setup interactions ─────────────────────────────────────────────── */
+document.querySelectorAll(".cat-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".cat-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    state.category = b.dataset.cat;
+  });
+});
+document.querySelectorAll(".q-num").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".q-num").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    state.numQuestions = parseInt(b.dataset.n);
+  });
+});
+
+$("btn-start-session").addEventListener("click", startSession);
+
+/* ── Start session ──────────────────────────────────────────────────── */
+async function startSession() {
+  const btn = $("btn-start-session");
+  btn.disabled = true;
+  btn.textContent = "Setting up…";
+
+  // Camera access
+  try {
+    state.stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+    videoEl.srcObject = state.stream;
+  } catch(e) {
+    alert("Camera/mic access is required. Please allow permissions and try again.");
+    btn.disabled = false; btn.textContent = "Start Interview →";
+    return;
+  }
+
+  // API call
+  try {
+    const res = await fetch("/api/chat/start", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ category: state.category, num_questions: state.numQuestions }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    state.sessionId  = data.session_id;
+    state.totalQ     = data.total_questions;
+    state.qIndex     = 0;
+
+    // Transition UI
+    setupScreen.style.display = "none";
+    messagesArea.classList.add("visible");
+    controls.classList.add("visible");
+    progressWrap.classList.add("visible");
+
+    // Start face detection loop
+    startFaceLoop();
+
+    // First question
+    appendQuestion(data.question, 0);
+    updateProgress(0);
+    setStatus("ready");
+
+  } catch(e) {
+    alert("Could not start session: " + e.message);
+    btn.disabled = false; btn.textContent = "Start Interview →";
+  }
+}
+
+/* ── Messaging ──────────────────────────────────────────────────────── */
+function appendQuestion(text, idx) {
+  const div = document.createElement("div");
+  div.className = "msg ai";
+  div.innerHTML = `
+    <div class="avatar ai-av">IQ</div>
+    <div class="bubble">
+      <span class="q-badge">Question ${idx+1} of ${state.totalQ}</span>
+      <div>${text}</div>
+    </div>`;
+  messagesArea.appendChild(div);
+  div.scrollIntoView({ behavior:"smooth" });
+  btnRecord.disabled = false;
+  btnSkip.disabled   = false;
+}
+
+function appendUserTranscript(text) {
+  const initials = "ME";
+  const div = document.createElement("div");
+  div.className = "msg user";
+  div.innerHTML = `
+    <div class="avatar user-av">${initials}</div>
+    <div class="bubble">${text || "<i style='color:var(--muted)'>No speech detected</i>"}</div>`;
+  messagesArea.appendChild(div);
+  div.scrollIntoView({ behavior:"smooth" });
+}
+
+function appendScoreCard(scores) {
+  const bars = [
+    { label:"Content",    val: scores.content_score,   color:"#6c8fff" },
+    { label:"Fluency",    val: scores.fluency_score,   color:"#4af0b6" },
+    { label:"Eye contact",val: scores.eye_score,       color:"#a78bfa" },
+    { label:"Posture",    val: scores.posture_score,   color:"#f59e0b" },
+  ];
+  const barsHtml = bars.map(b => `
+    <div class="score-row">
+      <span class="label">${b.label}</span>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${b.val}%;background:${b.color}"></div></div>
+      <span class="score-val">${Math.round(b.val)}</span>
+    </div>`).join("");
+
+  const tipsHtml = (scores.tips || []).map(t =>
+    `<div class="tip-item">${t}</div>`).join("");
+
+  const div = document.createElement("div");
+  div.className = "msg ai";
+  div.innerHTML = `
+    <div class="avatar ai-av">IQ</div>
+    <div class="bubble">
+      <div class="score-card">
+        <div class="sc-title">Score: ${Math.round(scores.composite)} / 100 &nbsp;·&nbsp; ${scores.wpm} wpm &nbsp;·&nbsp; ${scores.word_count} words</div>
+        ${barsHtml}
+        <div class="tip-list">${tipsHtml}</div>
+      </div>
+    </div>`;
+  messagesArea.appendChild(div);
+  div.scrollIntoView({ behavior:"smooth" });
+}
+
+function appendAIMessage(text) {
+  const div = document.createElement("div");
+  div.className = "msg ai";
+  div.innerHTML = `
+    <div class="avatar ai-av">IQ</div>
+    <div class="bubble">${text}</div>`;
+  messagesArea.appendChild(div);
+  div.scrollIntoView({ behavior:"smooth" });
+}
+
+/* ── Record ─────────────────────────────────────────────────────────── */
+btnRecord.addEventListener("click", () => {
+  if (!state.recording) startRecording();
+  else                  stopRecording();
+});
+
+btnSkip.addEventListener("click", () => {
+  if (state.recording) stopRecording(true);
+  else submitAnswer("", true);
+});
+
+function startRecording() {
+  state.chunks   = [];
+  state.elapsed  = 0;
+  state.recording = true;
+
+  const mr = new MediaRecorder(state.stream, { mimeType: supportedMime() });
+  state.mediaRecorder = mr;
+  mr.ondataavailable = e => { if (e.data.size) state.chunks.push(e.data); };
+  mr.start(200);
+
+  btnRecord.className = "btn-rec stop";
+  btnRecord.textContent = "⏹ Stop";
+  btnSkip.textContent = "Submit";
+  setStatus("recording");
+  startTimer();
+}
+
+function stopRecording(skip=false) {
+  state.recording = false;
+  clearInterval(state.timerInterval);
+  btnRecord.disabled = true;
+  btnSkip.disabled   = true;
+  setStatus("processing");
+
+  state.mediaRecorder.onstop = async () => {
+    const blob   = new Blob(state.chunks, { type: supportedMime() });
+    const audioB64 = await blobToB64(blob);
+    const frameB64 = state.lastFrame || "";
+    await submitAnswer(audioB64, frameB64, skip);
+  };
+  state.mediaRecorder.stop();
+}
+
+async function submitAnswer(audioB64, frameB64, skip=false) {
+  const duration = state.elapsed;
+
+  let data;
+  try {
+    const res = await fetch("/api/chat/answer", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({
+        session_id: state.sessionId,
+        audio_b64:  audioB64,
+        frame_b64:  frameB64,
+        duration_s: duration,
+      }),
+    });
+    data = await res.json();
+  } catch(e) {
+    appendAIMessage("⚠️ Network error. Please try again.");
+    setStatus("ready");
+    btnRecord.disabled = false;
+    return;
+  }
+
+  if (data.error) {
+    appendAIMessage("⚠️ " + data.error);
+    setStatus("ready");
+    btnRecord.disabled = false;
+    return;
+  }
+
+  // Show transcript
+  appendUserTranscript(data.transcript);
+
+  // Show score card
+  if (data.scores) {
+    state.scores.push(data.scores);
+    appendScoreCard(data.scores);
+    updateLiveMetrics();
+  }
+
+  state.qIndex++;
+  updateProgress(state.qIndex);
+
+  if (data.status === "next") {
+    appendQuestion(data.question, state.qIndex);
+    btnRecord.className = "btn-rec start";
+    btnRecord.textContent = "⏺ Record";
+    btnRecord.disabled = false;
+    btnSkip.textContent = "Skip";
+    btnSkip.disabled = false;
+    timerDisplay.textContent = "0:00";
+    timerDisplay.classList.remove("warn");
+    setStatus("ready");
+  } else if (data.status === "complete") {
+    showFinalReport(data.report);
+  }
+}
+
+/* ── Progress ───────────────────────────────────────────────────────── */
+function updateProgress(done) {
+  const pct = Math.round((done / state.totalQ) * 100);
+  progFill.style.width = pct + "%";
+  progLabel.textContent = done < state.totalQ
+    ? `Question ${done+1} of ${state.totalQ}`
+    : "Interview complete!";
+  progPct.textContent = pct + "%";
+}
+
+/* ── Timer ──────────────────────────────────────────────────────────── */
+function startTimer() {
+  state.elapsed = 0;
+  timerDisplay.classList.remove("warn");
+  state.timerInterval = setInterval(() => {
+    state.elapsed++;
+    const m = Math.floor(state.elapsed/60);
+    const s = state.elapsed % 60;
+    timerDisplay.textContent = `${m}:${s.toString().padStart(2,"0")}`;
+    if (state.elapsed >= 120) timerDisplay.classList.add("warn");
+  }, 1000);
+}
+
+/* ── Face detection (canvas snapshot) ──────────────────────────────── */
+function startFaceLoop() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 320; canvas.height = 240;
+  const ctx = canvas.getContext("2d");
+
+  state.frameInterval = setInterval(() => {
+    ctx.drawImage(videoEl, 0, 0, 320, 240);
+    state.lastFrame = canvas.toDataURL("image/jpeg", 0.6).split(",")[1];
+
+    // Very lightweight client-side face proxy using brightness variance
+    const img = ctx.getImageData(0, 0, 320, 240).data;
+    let sum = 0, count = 0;
+    for (let i=0; i<img.length; i+=16) { sum += img[i]; count++; }
+    const avg = sum/count;
+    const faceDetected = avg > 20 && avg < 240;
+
+    tagFace.textContent = faceDetected ? "Face ✓" : "No face";
+    tagFace.className   = "face-tag " + (faceDetected ? "ok" : "warn");
+
+    // Gaze / head tags are updated from server response
+    if (state.recording) {
+      state.eyeTotal++;
+      if (faceDetected) state.eyeHits++;
+    }
+  }, 800);
+}
+
+/* ── Update live metrics panel ──────────────────────────────────────── */
+function updateLiveMetrics() {
+  const s = state.scores;
+  if (!s.length) return;
+  const avg = key => Math.round(s.reduce((a,v)=>a+v[key],0)/s.length);
+  $("m-qcount").textContent  = s.length + " / " + state.totalQ;
+  $("m-avgscore").textContent = avg("composite");
+  $("m-wpm").textContent      = avg("wpm");
+  const eyePct = state.eyeTotal ? Math.round(state.eyeHits/state.eyeTotal*100) : 0;
+  $("m-eye").textContent = eyePct + "%";
+
+  const eyeEl = $("m-eye");
+  eyeEl.className = "mv " + (eyePct > 65 ? "good" : "bad");
+  $("m-avgscore").className = "mv " + (avg("composite") > 70 ? "good" : "bad");
+}
+
+/* ── Final report ───────────────────────────────────────────────────── */
+function showFinalReport(report) {
+  if (!report) return;
+
+  controls.style.display = "none";
+  $("live-metrics").style.display = "none";
+
+  $("rep-grade").textContent  = report.grade;
+  $("rep-label").textContent  = `Overall: ${Math.round(report.overall_score)} / 100`;
+
+  const bars = [
+    { label:"Content",     val: report.content_score },
+    { label:"Fluency",     val: report.fluency_score },
+    { label:"Eye contact", val: report.eye_contact_score },
+    { label:"Posture",     val: report.posture_score },
+    { label:"Engagement",  val: report.engagement_score },
+  ];
+  const colors = ["#6c8fff","#4af0b6","#a78bfa","#f59e0b","#fb7185"];
+
+  $("rep-bars").innerHTML = bars.map((b,i) => `
+    <div class="score-row">
+      <span class="label" style="font-size:13px">${b.label}</span>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${b.val}%;background:${colors[i]}"></div></div>
+      <span class="score-val">${Math.round(b.val)}</span>
+    </div>`).join("");
+
+  $("report-section").classList.add("visible");
+
+  appendAIMessage(`
+    <strong>Interview complete!</strong> Your overall score is <strong>${Math.round(report.overall_score)}/100</strong> (Grade: ${report.grade}).<br><br>
+    <strong>Top tips to improve:</strong><br>
+    ${(report.top_tips||[]).map(t=>`• ${t}`).join("<br>")}
+  `);
+
+  clearInterval(state.timerInterval);
+  clearInterval(state.frameInterval);
+}
+
+/* ── Status helper ──────────────────────────────────────────────────── */
+function setStatus(s) {
+  const states = {
+    ready:      { dot:"",          text:"Press record to answer" },
+    recording:  { dot:"recording", text:"Recording…" },
+    processing: { dot:"",          text:"Analysing your answer…" },
+  };
+  const st = states[s] || states.ready;
+  statusDot.className  = "dot " + st.dot;
+  statusText.textContent = st.text;
+}
+
+/* ── Utilities ──────────────────────────────────────────────────────── */
+function blobToB64(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(",")[1]);
+    r.onerror = () => rej(new Error("FileReader failed"));
+    r.readAsDataURL(blob);
+  });
+}
+
+function supportedMime() {
+  const mimes = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
+  return mimes.find(m => MediaRecorder.isTypeSupported(m)) || "";
+}
+</script>
+</body>
+</html>

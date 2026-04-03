@@ -21,7 +21,7 @@ last_report = None
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('interview_chat.html')
 
 @app.route('/analyze', methods=['POST'])
 def analyze_video():
