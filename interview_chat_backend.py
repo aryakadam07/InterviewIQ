@@ -2,7 +2,7 @@
 import os, io, json, base64, time, uuid, tempfile
 import numpy as np
 import cv2
-from faster_whisper import WhisperModel
+#from faster_whisper import WhisperModel
 import mediapipe as mp
 import spacy
 import nltk
@@ -142,22 +142,27 @@ def _analyse_face(frame_b64: str) -> dict:
     except Exception as e:
         return {"detected": False, "error": str(e)}
 
-
 def _transcribe_audio(audio_b64: str) -> str:
-    """Decode base64 audio and transcribe with faster-whisper."""
     try:
+        import os, base64, tempfile
+        
+        # Decode base64 audio
         audio_bytes = base64.b64decode(audio_b64)
 
+        # Save to temp file
         with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp:
             tmp.write(audio_bytes)
             tmp_path = tmp.name
 
-        model = get_whisper()
+        # Transcribe using faster-whisper
         segments, _ = model.transcribe(tmp_path)
 
+        # Combine all segments
         text = " ".join([seg.text for seg in segments])
 
+        # Delete temp file
         os.unlink(tmp_path)
+
         return text.strip()
 
     except Exception as e:
