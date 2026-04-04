@@ -165,7 +165,7 @@ def get_demo_data():
 
 if __name__ == '__main__':
     from modules.ml_module import load_or_train_models
-    load_or_train_models()
+    #load_or_train_models()
     
     logger.info("Starting InterviewIQ Server")
 
