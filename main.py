@@ -161,10 +161,13 @@ def get_demo_data():
     
     return jsonify(response_data)
 
+
+
 if __name__ == '__main__':
-    # Ensure models are trained
     from modules.ml_module import load_or_train_models
     load_or_train_models()
     
-    logger.info("Starting InterviewIQ Server on http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    logger.info("Starting InterviewIQ Server")
+
+    port = int(os.environ.get("PORT", 5000))  
+    app.run(host='0.0.0.0', port=port, debug=False)
